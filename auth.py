@@ -1,4 +1,3 @@
-# Em auth.py
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -8,15 +7,20 @@ from models import Usuario
 from schemas import TokenData
 from sqlalchemy.orm import Session
 from models import get_db
+from dotenv import load_dotenv
+import os
 
-SECRET_KEY = "SECRET_KEY"
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if SECRET_KEY is None:
+    raise ValueError("Erro: SECRET_KEY não foi definida no .env")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Contexto de Senha
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Esquema de Autenticação
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_password(plain_password, hashed_password):

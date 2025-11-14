@@ -1,8 +1,6 @@
-# Em schemas.py
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-# --- Esquemas do Pokémon ---
 class PokemonBase(BaseModel):
     nome: str
     tipo: str
@@ -17,14 +15,12 @@ class Pokemon(PokemonBase):
     class Config:
         from_attributes = True 
 
-# --- Esquemas do Usuário ---
 class Usuario(BaseModel):
     id: int
     login: str
     class Config:
         from_attributes = True
 
-# --- Esquemas de Autenticação ---
 class TokenData(BaseModel):
     login: Optional[str] = None
 
