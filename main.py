@@ -10,20 +10,19 @@ from models import get_db
 
 app = FastAPI()
 
-# --- ENDPOINT DE LOGIN ---
 @app.post("/token")
 def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), 
+    login_data: schemas.LoginRequest,
     db: Session = Depends(get_db)
 ):
     user = db.query(models.Usuario).filter(
-        models.Usuario.login == form_data.username
+        models.Usuario.login == login_data.username
     ).first()
 
-    if not user or not auth.verify_password(form_data.password, user.senha_hash):
+    if not user or not auth.verify_password(login_data.password, user.senha_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Login ou Senha incorretos", # Mensagem para o App [cite: 14]
+            detail="Login ou Senha incorretos",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

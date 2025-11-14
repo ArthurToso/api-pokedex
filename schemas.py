@@ -27,3 +27,7 @@ class Usuario(BaseModel):
 # --- Esquemas de Autenticação ---
 class TokenData(BaseModel):
     login: Optional[str] = None
+
+class LoginRequest(BaseModel):
+    usuario: str
+    senha: str
