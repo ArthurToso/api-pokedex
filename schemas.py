@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 
 class PokemonBase(BaseModel):
@@ -12,6 +12,12 @@ class PokemonCreate(PokemonBase):
 class Pokemon(PokemonBase):
     id: int
     dono_login: str
+    @field_validator('habilidades', mode='before')
+    @classmethod
+    def split_habilidades(cls, v: any) -> List[str]:
+        if isinstance(v, str):
+            return v.split(',')
+        return v
     class Config:
         from_attributes = True 
 
