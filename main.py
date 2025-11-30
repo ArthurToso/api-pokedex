@@ -34,13 +34,6 @@ def login_for_access_token(
 
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Endpoint "Hello World" (agora protegido)
-@app.get("/users/me")
-def read_users_me(current_user: schemas.Usuario = Depends(auth.get_current_user)):
-    # Se chegar aqui, o usuário está logado.
-    # A função get_current_user cuida da validação do token.
-    return current_user
-
 @app.post("/pokemons", response_model=schemas.Pokemon, status_code=status.HTTP_201_CREATED)
 def create_pokemon(
     pokemon: schemas.PokemonCreate, 
@@ -54,7 +47,7 @@ def create_pokemon(
     db_pokemon = db.query(models.Pokemon).filter(
         models.Pokemon.nome == pokemon.nome
     ).first()
-    
+     
     if db_pokemon:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
@@ -78,3 +71,59 @@ def create_pokemon(
     db.refresh(novo_pokemon)
     
     return novo_pokemon
+
+@app.get("/pokemons", response_model=List[schemas.Pokemon])
+def list_pokemons(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    # current_user garante que só quem tem token pode ver a lista
+    current_user: models.Usuario = Depends(auth.get_current_user)
+):
+    pokemons = db.query(models.Pokemon).offset(skip).limit(limit).all()
+    return pokemons
+
+@app.get("/pokemons/{pokemon_id}", response_model=schemas.Pokemon)
+def read_pokemon(
+    pokemon_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(auth.get_current_user)
+):
+    pokemon = db.query(models.Pokemon).filter(models.Pokemon.id == pokemon_id).first()
+    if pokemon is None:
+        raise HTTPException(status_code=404, detail="Pokémon não encontrado")
+    return pokemon
+
+@app.put("/pokemons/{pokemon_id}", response_model=schemas.Pokemon)
+def update_pokemon(
+    pokemon_id: int, 
+    pokemon_update: schemas.PokemonCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(auth.get_current_user)
+):
+    # Busca o pokémon existente
+    db_pokemon = db.query(models.Pokemon).filter(models.Pokemon.id == pokemon_id).first()
+    if db_pokemon is None:
+        raise HTTPException(status_code=404, detail="Pokémon não encontrado")
+    
+    db_pokemon.nome = pokemon_update.nome
+    db_pokemon.tipo = pokemon_update.tipo
+    db_pokemon.habilidades = ",".join(pokemon_update.habilidades)
+        
+    db.commit()
+    db.refresh(db_pokemon)
+    return db_pokemon
+
+@app.delete("/pokemons/{pokemon_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_pokemon(
+    pokemon_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(auth.get_current_user)
+):
+    pokemon = db.query(models.Pokemon).filter(models.Pokemon.id == pokemon_id).first()
+    if pokemon is None:
+        raise HTTPException(status_code=404, detail="Pokémon não encontrado")
+    
+    db.delete(pokemon)
+    db.commit()
+    return None
