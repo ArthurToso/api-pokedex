@@ -72,7 +72,7 @@ def create_pokemon(
     
     return novo_pokemon
 
-@app.get("/pokemons", response_model=List[schemas.Pokemon])
+@app.get("/pokemons-list", response_model=List[schemas.Pokemon])
 def list_pokemons(
     skip: int = 0, 
     limit: int = 100, 
