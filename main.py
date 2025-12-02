@@ -83,6 +83,33 @@ def list_pokemons(
     pokemons = db.query(models.Pokemon).offset(skip).limit(limit).all()
     return pokemons
 
+@app.get("/pokemons/search/tipo", response_model=List[schemas.Pokemon])
+def search_pokemon_by_type(
+    q: str, # O termo da busca vem na URL: ?q=Fogo
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(auth.get_current_user)
+):
+    # O PDF exige explicitamente o uso de LIKE no SQL
+    # No SQLAlchemy, usamos .like(f"%{termo}%")
+    pokemons = db.query(models.Pokemon).filter(
+        models.Pokemon.tipo.like(f"%{q}%")
+    ).all()
+    
+    return pokemons
+
+@app.get("/pokemons/search/habilidade", response_model=List[schemas.Pokemon])
+def search_pokemon_by_ability(
+    q: str, # O termo da busca vem na URL: ?q=Choque
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(auth.get_current_user)
+):
+    # Busca se o termo pesquisado faz parte da string de habilidades
+    pokemons = db.query(models.Pokemon).filter(
+        models.Pokemon.habilidades.like(f"%{q}%")
+    ).all()
+    
+    return pokemons
+
 @app.get("/pokemons/{pokemon_id}", response_model=schemas.Pokemon)
 def read_pokemon(
     pokemon_id: int, 
